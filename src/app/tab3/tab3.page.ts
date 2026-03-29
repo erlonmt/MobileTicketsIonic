@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { SenhaService } from '../services/senhas';
 
 @Component({
   selector: 'app-tab3',
@@ -8,6 +9,6 @@ import { Component } from '@angular/core';
 })
 export class Tab3Page {
 
-  constructor() {}
+  constructor(public senhasService: SenhaService) {}
 
 }
