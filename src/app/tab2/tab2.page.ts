@@ -15,17 +15,10 @@ export class Tab2Page {
   constructor(public senhaService: SenhaService) {}
 
   chamar() {
-    const senhaSemGuiche = this.senhaService.chamarProximaSenha();
+    const senhaComGuiche = this.senhaService.chamarSenhaPainel();
 
-    if (senhaSemGuiche) {
-      const senhaComGuiche = `${senhaSemGuiche} - G${this.guiche}`;
+    if (senhaComGuiche) {
       this.senhaAtual = senhaComGuiche;
-      
-      this.senhaService.ultimasChamadas.push(senhaComGuiche);
-
-      if (this.senhaService.ultimasChamadas.length > 5) {
-        this.senhaService.ultimasChamadas.shift();
-      }
     } else {
       alert('Nenhuma senha disponível');
     }

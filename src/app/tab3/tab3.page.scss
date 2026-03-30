@@ -1,62 +1,117 @@
-.modern-card {
-  background: #ffffff;
-  border-radius: 20px;
-  box-shadow: 0 4px 16px #0001;
+ion-card {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 2px 10px #00448a10;
+  margin-bottom: 22px;
   border: none;
-  padding-bottom: 4px;
 }
 
-ion-card-header.ion-text-center {
+ion-card-header {
   background: #f5f8fa;
-  border-radius: 20px 20px 0 0;
-  border-bottom: 1.5px solid #e7ecef;
-  padding: 28px 16px 20px;
-}
-
-.senha-box {
-  background: #fafdff;
-  border-radius: 14px;
-  min-width: 120px;
-  min-height: 54px;
+  border-radius: 18px 18px 0 0;
+  border-bottom: 1px solid #e7ecef;
+  padding: 18px 16px 10px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  box-shadow: 0 1px 12px #e0e7ef90;
-  border: 1px solid #eef1f3;
+  gap: 10px;
 }
 
-.senha-atual-label {
-  margin-top: 14px;
-  font-size: 1rem;
-  color: #adb8c6;
-  letter-spacing: 1px;
-  text-transform: uppercase;
+ion-card-header span {
+  font-size: 1.05em;
+  font-weight: 600;
 }
 
-.senha-gerada {
-  font-size: 2.2rem;
-  color: #30597a;
-  font-weight: 700;
+ion-card-header div {
+  font-size: 0.95em;
+  color: #888;
+}
+
+ion-icon[name="stats-chart-outline"],
+ion-icon[name="megaphone-outline"] {
+  font-size: 1.4em;
+  vertical-align: middle;
+  margin-right: 10px;
 }
 
 ion-card-content {
+  padding: 14px 8px 2px 8px;
+}
+
+ion-card-content > div {
+  margin-bottom: 18px;
+}
+
+ion-card-content > div:last-child {
+  margin-bottom: 0;
+}
+
+ion-card-content > div > div:first-child {
+  font-size: 1em;
+  font-weight: bold;
+  margin-bottom: 6px;
   display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 32px 0 18px 0;
+  align-items: center;
+  gap: 7px;
 }
 
-ion-badge[color="primary"],
-ion-badge[color="secondary"],
-ion-badge[color="success"],
-ion-badge[color="tertiary"] {
-  font-size: 1rem;
+ion-card-content > div > div {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  align-items: center;
+}
+
+ion-card-content > div > div span:first-child {
+  color: #405167;
+}
+
+ion-card-content > div > div span:last-child {
   font-weight: 600;
-  border-radius: 10px;
-  padding: 5px 14px;
+  color: #21436d;
 }
 
-ion-badge[color="primary"] {
-  font-size: 1.1rem;
-  padding: 6px 16px;
+ion-card-content .senha-lista {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #eceff2;
+}
+
+ion-card-content .senha-lista:last-child {
+  border-bottom: none;
+}
+
+.senha-guiche-badge {
+  font-size: 1em;
+  background: #d6e4fa;
+  color: #23456a;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.sem-chamadas {
+  font-size: 1em;
+  color: #999;
+  text-align: center;
+  margin: 14px 0;
+}
+
+@media (max-width: 600px) {
+  ion-card,
+  ion-card-header {
+    border-radius: 10px !important;
+  }
+  ion-card-header {
+    padding-top: 12px;
+    padding-bottom: 8px;
+  }
+  ion-icon[name="stats-chart-outline"],
+  ion-icon[name="megaphone-outline"] {
+    font-size: 1.1em;
+    margin-right: 7px;
+  }
+  ion-card-content > div > div {
+    padding: 6px 0;
+  }
 }

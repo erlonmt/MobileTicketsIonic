@@ -16,106 +16,121 @@ export class SenhaService {
     SG: [],
   };
 
-  public inputNovaSenha: string = '';
-
   public ultimasChamadas: string[] = [];
+  
+  public atendimentos: {
+    senha: string,
+    tipo: string,
+    guiche: number,
+    tempo: number,
+    horaAtendimento: Date
+  }[] = [];
 
-  somaGeral() {
+  public emissoes: {
+    senha: string,
+    tipo: string,
+    horaEmissao: Date
+  }[] = [];
+
+  public atendidosPorTipo: { [key: string]: number } = {
+    SP: 0,
+    SE: 0,
+    SG: 0,
+  };
+
+  private ultimoTipoChamado: 'SP' | 'SE' | 'SG' | null = null;
+
+  private somaGeral() {
     this.senhasGeral++;
     this.senhasTotal++;
   }
 
-  somaPrior() {
+  private somaPrior() {
     this.senhasPrior++;
     this.senhasTotal++;
   }
 
-  somaExame() {
+  private somaExame() {
     this.senhasExame++;
     this.senhasTotal++;
   }
 
-  novaSenha(tipoSenha: string = '') {
-    let prefix = '';
-    let key = '';
-    if (tipoSenha === 'SG') {
-      this.somaGeral();
-      prefix = 'SG';
-      key = 'SG';
-    } else if (tipoSenha === 'SP') {
-      this.somaPrior();
-      prefix = 'SP';
-      key = 'SP';
-    } else if (tipoSenha === 'SE') {
-      this.somaExame();
-      prefix = 'SE';
-      key = 'SE';
-    } else {
-      return;
-    }
+  novaSenha(tipoSenha: 'SP' | 'SG' | 'SE'): string {
+    if (tipoSenha === 'SG') this.somaGeral();
+    if (tipoSenha === 'SP') this.somaPrior();
+    if (tipoSenha === 'SE') this.somaExame();
 
     const now = new Date();
-    this.inputNovaSenha =
+    const prefix = tipoSenha;
+
+    const senha =
       now.getFullYear().toString().substring(2, 4) +
       (now.getMonth() + 1).toString().padStart(2, '0') +
       now.getDate().toString().padStart(2, '0') +
       '-' +
-      prefix + (this.senhaArray[key].length + 1).toString().padStart(2, '0');
+      prefix +
+      (this.senhaArray[tipoSenha].length + 1)
+        .toString()
+        .padStart(3, '0');
 
-    this.senhaArray[key].push(this.inputNovaSenha);
+    this.senhaArray[tipoSenha].push(senha);
+
+    this.emissoes.push({
+      senha,
+      tipo: tipoSenha,
+      horaEmissao: new Date()
+    });
+
+    return senha;
   }
-
-  private ultimoTipoChamado: 'SP' | 'SE' | 'SG' | null = null;
 
   chamarProximaSenha(): string | null {
     const filaSP = this.senhaArray['SP'];
     const filaSE = this.senhaArray['SE'];
     const filaSG = this.senhaArray['SG'];
 
+    let senhaSelecionada: string | undefined;
+    let tipoSelecionado: 'SP' | 'SE' | 'SG' | null = null;
+
     if (!this.ultimoTipoChamado) {
       if (filaSP.length > 0) {
-        this.ultimoTipoChamado = 'SP';
-        return filaSP.shift()!;
+        tipoSelecionado = 'SP';
+        senhaSelecionada = filaSP.shift();
+      } else if (filaSE.length > 0) {
+        tipoSelecionado = 'SE';
+        senhaSelecionada = filaSE.shift();
+      } else if (filaSG.length > 0) {
+        tipoSelecionado = 'SG';
+        senhaSelecionada = filaSG.shift();
       }
+    } else if (this.ultimoTipoChamado === 'SP') {
       if (filaSE.length > 0) {
-        this.ultimoTipoChamado = 'SE';
-        return filaSE.shift()!;
+        tipoSelecionado = 'SE';
+        senhaSelecionada = filaSE.shift();
+      } else if (filaSG.length > 0) {
+        tipoSelecionado = 'SG';
+        senhaSelecionada = filaSG.shift();
+      } else if (filaSP.length > 0) {
+        tipoSelecionado = 'SP';
+        senhaSelecionada = filaSP.shift();
       }
-      if (filaSG.length > 0) {
-        this.ultimoTipoChamado = 'SG';
-        return filaSG.shift()!;
+    } else {
+      if (filaSP.length > 0) {
+        tipoSelecionado = 'SP';
+        senhaSelecionada = filaSP.shift();
+      } else if (filaSE.length > 0) {
+        tipoSelecionado = 'SE';
+        senhaSelecionada = filaSE.shift();
+      } else if (filaSG.length > 0) {
+        tipoSelecionado = 'SG';
+        senhaSelecionada = filaSG.shift();
       }
-      return null;
     }
 
-    if (this.ultimoTipoChamado === 'SP') {
-      if (filaSE.length > 0) {
-        this.ultimoTipoChamado = 'SE';
-        return filaSE.shift()!;
-      }
-      if (filaSG.length > 0) {
-        this.ultimoTipoChamado = 'SG';
-        return filaSG.shift()!;
-      }
-      if (filaSP.length > 0) {
-        this.ultimoTipoChamado = 'SP';
-        return filaSP.shift()!;
-      }
-    }
-
-    if (this.ultimoTipoChamado === 'SE' || this.ultimoTipoChamado === 'SG') {
-      if (filaSP.length > 0) {
-        this.ultimoTipoChamado = 'SP';
-        return filaSP.shift()!;
-      }
-      if (filaSE.length > 0) {
-        this.ultimoTipoChamado = 'SE';
-        return filaSE.shift()!;
-      }
-      if (filaSG.length > 0) {
-        this.ultimoTipoChamado = 'SG';
-        return filaSG.shift()!;
-      }
+    if (senhaSelecionada && tipoSelecionado) {
+      this.ultimoTipoChamado = tipoSelecionado;
+      this.atendidosPorTipo[tipoSelecionado]++;
+      return senhaSelecionada;
     }
 
     return null;
@@ -125,13 +140,26 @@ export class SenhaService {
     const senha = this.chamarProximaSenha();
 
     if (senha) {
+      const tipo = senha.substring(7, 9) as 'SP' | 'SE' | 'SG';
       const guiche = Math.floor(Math.random() * 3) + 1;
-      const senhaComGuiche = `${senha} - G${guiche}`;
-      this.ultimasChamadas.push(senhaComGuiche);
+      const tempo = this.gerarTempoAtendimento(tipo);
+
+      this.atendimentos.push({
+        senha,
+        tipo,
+        guiche,
+        tempo,
+        horaAtendimento: new Date()
+      });
+
+      const senhaGuiche = `${senha} - G${guiche}`;
+      this.ultimasChamadas.push(senhaGuiche);
+
       if (this.ultimasChamadas.length > 5) {
         this.ultimasChamadas.shift();
       }
-      return senhaComGuiche;
+
+      return senhaGuiche;
     }
 
     return null;
@@ -142,23 +170,24 @@ export class SenhaService {
   }
 
   gerarTempoAtendimento(tipo: 'SP' | 'SG' | 'SE'): number {
-    if (tipo === 'SP') {
-      return this.randomEntre(10, 20);
-    }
-
-    if (tipo === 'SG') {
-      return this.randomEntre(2, 8);
-    }
-
-    if (tipo === 'SE') {
-      const chance = Math.random();
-      if (chance <= 0.95) {
-        return 1;
-      } else {
-        return 5;
-      }
-    }
-
+    if (tipo === 'SP') return this.randomEntre(10, 20);
+    if (tipo === 'SG') return this.randomEntre(2, 8);
+    if (tipo === 'SE') return Math.random() <= 0.95 ? 1 : 5;
     return 0;
+  }
+
+  mediaTempo(tipo: string): number {
+    const lista = this.atendimentos.filter(a => a.tipo === tipo);
+    if (lista.length === 0) return 0;
+    const soma = lista.reduce((acc, item) => acc + item.tempo, 0);
+    return +(soma / lista.length).toFixed(1);
+  }
+
+  getTotalAtendidosPorTipo(tipo: 'SP' | 'SE' | 'SG'): number {
+    return this.atendidosPorTipo[tipo] || 0;
+  }
+
+  getTotalAtendimentos(): number {
+    return Object.values(this.atendidosPorTipo).reduce((acc, val) => acc + val, 0);
   }
 }

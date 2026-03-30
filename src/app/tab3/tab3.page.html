@@ -1,12 +1,10 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>
-      Relatório de Senhas
-    </ion-title>
+    <ion-title>Relatório de Senhas</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="ion-padding">
+<ion-content [fullscreen]="true">
 
   <ion-header collapse="condense">
     <ion-toolbar>
@@ -14,67 +12,95 @@
     </ion-toolbar>
   </ion-header>
 
-  <ion-card style="background: #fff; border-radius: 20px; box-shadow: 0 4px 16px #0001; border: none; padding-bottom: 4px;">
-    <ion-card-header class="ion-text-center" style="background: #f5f8fa; border-radius: 20px 20px 0 0; border-bottom: 1.5px solid #e7ecef; padding: 28px 16px 20px;">
-      <div>
-        <ion-icon name="stats-chart-outline" size="large" color="medium"></ion-icon>
-        <div style="background: #fafdff; border-radius: 14px; min-width: 120px; min-height: 54px; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 12px #e0e7ef90; border: 1px solid #eef1f3;">
-          <span style="font-size: 2.2rem; color: #30597a; font-weight: 700;">Resumo</span>
-        </div>
-        <label style="margin-top: 14px; font-size: 1rem; color: #adb8c6; letter-spacing: 1px; text-transform: uppercase;">Total de Senhas Emitidas</label>
-      </div>
+  <ion-card>
+    <ion-card-header>
+      <ion-icon name="stats-chart-outline" size="large" color="primary"></ion-icon>
+      <span>Resumo Geral</span>
+      <div>Total de Senhas Emitidas e Estatísticas</div>
     </ion-card-header>
-    <ion-card-content style="display: flex; flex-direction: column; gap: 16px; padding: 32px 0 18px 0;">
-      <ion-list>
-        <ion-item>
-          <ion-label>
-            <ion-text color="primary"><strong>Total</strong></ion-text>
-          </ion-label>
-          <ion-badge 
-            color="primary" 
-            slot="end"
-            style="font-size: 1.1rem; font-weight: 600; border-radius: 10px; padding: 6px 16px;"
-          >
-            {{ senhasService.senhasTotal }}
-          </ion-badge>
-        </ion-item>
-        <ion-item>
-          <ion-label>
-            <ion-text color="medium"><strong>Geral</strong></ion-text>
-          </ion-label>
-          <ion-badge 
-            color="secondary" 
-            slot="end"
-            style="font-size: 1rem; font-weight: 600; border-radius: 10px; padding: 5px 14px;"
-          >
-            {{ senhasService.senhasGeral }}
-          </ion-badge>
-        </ion-item>
-        <ion-item>
-          <ion-label>
-            <ion-text color="success"><strong>Prioritária</strong></ion-text>
-          </ion-label>
-          <ion-badge 
-            color="success" 
-            slot="end"
-            style="font-size: 1rem; font-weight: 600; border-radius: 10px; padding: 5px 14px;"
-          >
-            {{ senhasService.senhasPrior }}
-          </ion-badge>
-        </ion-item>
-        <ion-item>
-          <ion-label>
-            <ion-text color="tertiary"><strong>Exame</strong></ion-text>
-          </ion-label>
-          <ion-badge 
-            color="tertiary" 
-            slot="end"
-            style="font-size: 1rem; font-weight: 600; border-radius: 10px; padding: 5px 14px;"
-          >
-            {{ senhasService.senhasExame }}
-          </ion-badge>
-        </ion-item>
-      </ion-list>
+    <ion-card-content>
+      <div>
+        <div>
+          <span><strong>Total Emitidas</strong></span>
+          <span>{{ senhasService.senhasTotal }}</span>
+        </div>
+        <div>
+          <span>Senhas Gerais</span>
+          <span>{{ senhasService.senhasGeral }}</span>
+        </div>
+        <div>
+          <span>Senhas Prioritárias</span>
+          <span>{{ senhasService.senhasPrior }}</span>
+        </div>
+        <div>
+          <span>Senhas para Exame</span>
+          <span>{{ senhasService.senhasExame }}</span>
+        </div>
+      </div>
+      <div>
+        <div>
+          <ion-icon name="podium-outline" color="dark"></ion-icon>
+          <span>Atendimentos Realizados</span>
+        </div>
+        <div>
+          <span>Total de Atendimentos</span>
+          <span>{{ senhasService.getTotalAtendimentos() }}</span>
+        </div>
+        <div>
+          <span>Geral Atendidos</span>
+          <span>{{ senhasService.getTotalAtendidosPorTipo('SG') }}</span>
+        </div>
+        <div>
+          <span>Prioritária Atendidos</span>
+          <span>{{ senhasService.getTotalAtendidosPorTipo('SP') }}</span>
+        </div>
+        <div>
+          <span>Exame Atendidos</span>
+          <span>{{ senhasService.getTotalAtendidosPorTipo('SE') }}</span>
+        </div>
+      </div>
+      <div>
+        <div>
+          <ion-icon name="timer-outline" color="dark"></ion-icon>
+          <span>Média Tempo Atendimento (min)</span>
+        </div>
+        <div>
+          <span>Prioritária</span>
+          <span>{{ senhasService.mediaTempo('SP') }}</span>
+        </div>
+        <div>
+          <span>Geral</span>
+          <span>{{ senhasService.mediaTempo('SG') }}</span>
+        </div>
+        <div>
+          <span>Exame</span>
+          <span>{{ senhasService.mediaTempo('SE') }}</span>
+        </div>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-icon name="megaphone-outline" color="medium"></ion-icon>
+      <span>Últimas Senhas Chamadas</span>
+    </ion-card-header>
+    <ion-card-content>
+      <div *ngIf="senhasService.ultimasChamadas.length > 0; else semChamadas">
+        <div *ngFor="let chamada of senhasService.ultimasChamadas">
+          <span>{{ chamada }}</span>
+          <span>
+            Guichê {{
+              chamada.split('- G')[1] ? chamada.split('- G')[1].trim() : ''
+            }}
+          </span>
+        </div>
+      </div>
+      <ng-template #semChamadas>
+        <div>
+          Nenhuma senha chamada ainda.
+        </div>
+      </ng-template>
     </ion-card-content>
   </ion-card>
 </ion-content>

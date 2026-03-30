@@ -14,7 +14,19 @@ export class Tab1Page {
   constructor(private senhaService: SenhaService) {}
 
   pegarSenha(tipo: 'SP' | 'SG' | 'SE') {
+    this.senhaGerada = '';
     this.senhaService.novaSenha(tipo);
-    this.senhaGerada = this.senhaService.inputNovaSenha;
+    let key = '';
+    if (tipo === 'SG') {
+      key = 'SG';
+    } else if (tipo === 'SP') {
+      key = 'SP';
+    } else if (tipo === 'SE') {
+      key = 'SE';
+    }
+    const arr = this.senhaService.senhaArray[key];
+    if (arr && arr.length > 0) {
+      this.senhaGerada = arr[arr.length - 1];
+    }
   }
 }
