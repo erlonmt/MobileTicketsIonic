@@ -9,6 +9,12 @@ import { SenhaService } from '../services/senhas';
 })
 export class Tab1Page {
 
-  constructor (public SenhasService: SenhaService) {}
+  senhaGerada: string = '';
 
+  constructor(private senhaService: SenhaService) {}
+
+  pegarSenha(tipo: 'SP' | 'SG' | 'SE') {
+    this.senhaService.novaSenha(tipo);
+    this.senhaGerada = this.senhaService.inputNovaSenha;
+  }
 }

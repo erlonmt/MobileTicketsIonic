@@ -1,10 +1,46 @@
-<ion-card>
-  <ion-card-header>
-    <ion-input readonly="true" label="Senha: " value="{{SenhasService.inputNovaSenha}}"></ion-input>
+<ion-card class="modern-card">
+  <ion-card-header class="ion-text-center">
+    <div>
+      <ion-icon name="key-outline" size="large" color="medium"></ion-icon>
+      <div class="senha-box">
+        <span class="senha-gerada">{{ senhaGerada ? senhaGerada : '--' }}</span>
+      </div>
+      <label class="senha-atual-label">Senha Atual</label>
+    </div>
   </ion-card-header>
   <ion-card-content>
-    <ion-button expand="block" (click)="SenhasService.novaSenha('SG')">Senha Geral</ion-button>
-    <ion-button expand="block" (click)="SenhasService.novaSenha('SP')">Senha Prioritária</ion-button>
-    <ion-button expand="block" (click)="SenhasService.novaSenha('SE')">Senha Exame</ion-button>
+    <ion-button
+      class="geral"
+      expand="block"
+      shape="round"
+      size="large"
+      fill="solid"
+      (click)="pegarSenha('SG')"
+    >
+      <ion-icon name="person-outline" slot="start" color="medium"></ion-icon>
+      Geral
+    </ion-button>
+    <ion-button
+      class="prioritaria"
+      expand="block"
+      shape="round"
+      size="large"
+      fill="solid"
+      (click)="pegarSenha('SP')"
+    >
+      <ion-icon name="star-outline" slot="start" color="medium"></ion-icon>
+      Prioritária
+    </ion-button>
+    <ion-button
+      class="exame"
+      expand="block"
+      shape="round"
+      size="large"
+      fill="solid"
+      (click)="pegarSenha('SE')"
+    >
+      <ion-icon name="medkit-outline" slot="start" color="medium"></ion-icon>
+      Exame
+    </ion-button>
   </ion-card-content>
 </ion-card>

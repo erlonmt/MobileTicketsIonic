@@ -1,0 +1,74 @@
+.modern-card {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 4px 16px #0001;
+  border: none;
+  padding-bottom: 4px;
+}
+
+ion-card-header.ion-text-center {
+  background: #f5f8fa;
+  border-radius: 20px 20px 0 0;
+  border-bottom: 1.5px solid #e7ecef;
+  padding: 28px 16px 20px;
+}
+
+.senha-box {
+  background: #fafdff;
+  border-radius: 14px;
+  min-width: 120px;
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 12px #e0e7ef90;
+  border: 1px solid #eef1f3;
+}
+
+.senha-atual-label {
+  margin-top: 14px;
+  font-size: 1rem;
+  color: #adb8c6;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.senha-gerada {
+  font-size: 2.2rem;
+  color: #30597a;
+  font-weight: 700;
+}
+
+ion-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 32px 0 18px 0;
+}
+
+ion-button.geral {
+  --background: #f0f4f8;
+  --color: #325e70;
+  font-weight: 600;
+  border-radius: 12px;
+  box-shadow: 0 2px 9px #e9f1f3a8;
+  border: 1px solid #e4eaec;
+}
+
+ion-button.prioritaria {
+  --background: #fafafc;
+  --color: #787868;
+  font-weight: 600;
+  border-radius: 12px;
+  box-shadow: 0 2px 9px #ecebe9a0;
+  border: 1px solid #efefef;
+}
+
+ion-button.exame {
+  --background: #f0f6f9;
+  --color: #387376;
+  font-weight: 600;
+  border-radius: 12px;
+  box-shadow: 0 2px 9px #cfe3e6a8;
+  border: 1px solid #e6edef;
+}
