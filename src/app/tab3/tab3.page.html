@@ -88,11 +88,9 @@
     <ion-card-content>
       <div *ngIf="senhasService.ultimasChamadas.length > 0; else semChamadas">
         <div *ngFor="let chamada of senhasService.ultimasChamadas">
-          <span>{{ chamada }}</span>
+          <span>{{ chamada.senha }}</span>
           <span>
-            Guichê {{
-              chamada.split('- G')[1] ? chamada.split('- G')[1].trim() : ''
-            }}
+            Guichê {{ chamada.guiche }}
           </span>
         </div>
       </div>

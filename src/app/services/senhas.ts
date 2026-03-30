@@ -16,7 +16,10 @@ export class SenhaService {
     SG: [],
   };
 
-  public ultimasChamadas: string[] = [];
+  public ultimasChamadas: {
+    senha: string,
+    guiche: number
+  }[] = [];
   
   public atendimentos: {
     senha: string,
@@ -139,6 +142,10 @@ export class SenhaService {
   chamarSenhaPainel(): string | null {
     const senha = this.chamarProximaSenha();
 
+    if (Math.random() <= 0.05) {
+      return this.chamarProximaSenha();
+    }
+
     if (senha) {
       const tipo = senha.substring(7, 9) as 'SP' | 'SE' | 'SG';
       const guiche = Math.floor(Math.random() * 3) + 1;
@@ -152,14 +159,16 @@ export class SenhaService {
         horaAtendimento: new Date()
       });
 
-      const senhaGuiche = `${senha} - G${guiche}`;
-      this.ultimasChamadas.push(senhaGuiche);
+      this.ultimasChamadas.push({
+        senha: senha,
+        guiche: guiche
+      });
 
       if (this.ultimasChamadas.length > 5) {
         this.ultimasChamadas.shift();
       }
 
-      return senhaGuiche;
+      return `Senha: ${senha} - Guichê: ${guiche}`;
     }
 
     return null;
