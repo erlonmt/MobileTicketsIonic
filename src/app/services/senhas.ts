@@ -45,7 +45,7 @@ export class SenhaService {
 
   private somaGeral() {
     this.senhasGeral++;
-    this.senhasTotal++;
+    this.senhasTotal++; 
   }
 
   private somaPrior() {
