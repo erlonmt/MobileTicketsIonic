@@ -1,4 +1,21 @@
 import { Injectable } from '@angular/core';
+import { db } from '../../../backend/database/connections';
+
+export async function buscarProximaSenha() {
+  const [rows]: any = await db.query(`
+    SELECT * FROM senha
+    WHERE status = 'emitida'
+    ORDER BY 
+      CASE 
+        WHEN tipo = 'SP' THEN 1
+        WHEN tipo = 'SE' THEN 2
+        WHEN tipo = 'SG' THEN 3
+      END
+    LIMIT 1
+  `);
+
+  return rows[0];
+}
 
 @Injectable({
   providedIn: 'root',
