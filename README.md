@@ -1,167 +1,218 @@
 # Mobile Tickets Ionic
 
-Aplicativo mobile/web feito com Ionic + Angular para simular um sistema de emissao e atendimento de senhas em guiche.
+Sistema de emissão e atendimento de senhas com interface **Ionic + Angular**, API **Node.js (Express)** e persistência em **MySQL**.
 
-## Visao geral
+## Sumário
 
-O projeto implementa um fluxo simples de fila com tres tipos de senha:
+- [Visão geral](#visão-geral)
+- [Arquitetura](#arquitetura)
+- [Requisitos](#requisitos)
+- [Configuração do banco de dados](#configuração-do-banco-de-dados)
+- [Como executar](#como-executar)
+- [API REST](#api-rest)
+- [Aplicativo (telas)](#aplicativo-telas)
+- [Estrutura de pastas](#estrutura-de-pastas)
+- [Scripts npm (frontend)](#scripts-npm-frontend)
 
-- `SG` - Senha Geral
-- `SP` - Senha Prioritaria
-- `SE` - Senha para Exame
+## Visão geral
 
-Cada senha emitida segue o formato:
+O projeto simula um fluxo de atendimento com três tipos de senha:
 
-`AAMMDD-TIPO###`
+| Código | Significado       |
+|--------|-------------------|
+| `SG`   | Senha geral       |
+| `SP`   | Senha prioritária |
+| `SE`   | Senha para exame  |
 
-Exemplo:
+**Na API (MySQL):** entre senhas com status `emitida`, a prioridade de chamada é `SP` → `SE` → `SG`. Dentro do mesmo tipo, vale ordem de chegada (**FIFO**), usando `id_senha ASC` na consulta.
 
-`260402-SP001`
+**No aplicativo Ionic:** o `SenhaService` (`src/app/services/senhas.ts`) roda **só no navegador**, mantém filas em memória, regras alternadas conforme o último tipo chamado e métricas simuladas (tempo de atendimento). **Não há import de `mysql2` no frontend** — o bundle Angular não deve incluir o cliente MySQL.
 
-## Funcionalidades principais
+Em resumo: as telas funcionam como **protótipo autônomo**; dados persistidos e a fila “oficial” vêm do **backend + MySQL** quando você usa a API (por exemplo via `curl` ou integração futura com `HttpClient`).
 
-### 1) Emissao de senhas (Cliente)
+## Arquitetura
 
-Na aba **Cliente**, o usuario pode gerar senhas dos tres tipos (`SG`, `SP`, `SE`).
-
-- A senha mais recente aparece em destaque na tela.
-- O sistema incrementa contadores por tipo e total de emissoes.
-- Cada emissao fica registrada com data/hora.
-
-### 2) Chamada de senhas (Atendente)
-
-Na aba **Atendente**, o usuario:
-
-- escolhe o guiche (`1`, `2` ou `3`);
-- chama a proxima senha da fila;
-- visualiza as ultimas chamadas.
-
-Regras de selecao da proxima senha:
-
-- na primeira chamada, prioridade para `SP`, depois `SE`, depois `SG`;
-- se a ultima chamada foi `SP`, a proxima tenta `SE`, depois `SG`, depois `SP`;
-- caso contrario, tenta `SP`, depois `SE`, depois `SG`.
-
-Observacao:
-
-- Existe uma simulacao de "falta": com ~5% de chance, uma senha chamada e ignorada e o sistema chama a proxima automaticamente.
-
-### 3) Relatorios e estatisticas
-
-Na aba **Relatorios**, o app exibe:
-
-- total de senhas emitidas;
-- quantidade emitida por tipo;
-- total de atendimentos;
-- total atendido por tipo;
-- media de tempo de atendimento por tipo;
-- ultimas senhas chamadas.
-
-## Regras de negocio de tempo de atendimento
-
-Tempo gerado por tipo (em minutos):
-
-- `SP`: entre `10` e `20`;
-- `SG`: entre `2` e `8`;
-- `SE`: `1` minuto em 95% dos casos, e `5` minutos em 5% dos casos.
-
-## Tecnologias utilizadas
-
-- [Ionic Framework](https://ionicframework.com/) `8`
-- [Angular](https://angular.io/) `20`
-- [Capacitor](https://capacitorjs.com/) `8`
-- TypeScript
-- SCSS
-
-## Estrutura de telas
-
-O app usa navegacao por abas (`tabs`):
-
-- **Cliente** (`tab1`) - emissao de senhas;
-- **Atendente** (`tab2`) - chamada e painel operacional;
-- **Relatorios** (`tab3`) - indicadores e historico recente.
-
-## Estrutura tecnica (resumo)
-
-Arquivos principais:
-
-- `src/app/services/senhas.ts`  
-  Servico central com toda a logica de fila, emissoes, chamadas, tempos e metricas.
-- `src/app/tab1/*`  
-  Interface de emissao de senha para cliente.
-- `src/app/tab2/*`  
-  Interface de chamada de senha para atendente.
-- `src/app/tab3/*`  
-  Interface de relatorios.
-- `src/app/tabs/*`  
-  Configuracao das abas e navegacao principal.
-
-## Como executar o projeto
-
-### Pre-requisitos
-
-- Node.js (LTS recomendado)
-- npm
-- Ionic CLI (opcional, mas recomendado)
-
-Instalacao da CLI:
-
-```bash
-npm install -g @ionic/cli
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Navegador / WebView (Ionic + Angular)                          │
+│  • SenhaService: filas em memória, relatórios, tempos simulados │
+│  • Não acessa MySQL diretamente                                  │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+         (opcional) HTTP       │  hoje o app não consome a API por padrão
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Express — backend/server.ts ou src/server.ts — porta 3000      │
+│  • Rotas: /gerar-senha, /chamar-senha, /painel                  │
+└───────────────────────────────┬─────────────────────────────────┘
+                                │ mysql2 (pool)
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  MySQL — banco `controle_atendimento`                           │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### Instalacao
+- **Frontend:** `npm start` → `ng serve` (porta padrão **4200**). Alternativa: `ionic serve`.
+- **Backend:** Express em **http://localhost:3000** (`backend/server.ts` ou `src/server.ts`).
+- **Banco:** pool em `backend/database/connections.ts` (ajuste `host`, `user`, `password`, `database`).
+
+## Requisitos
+
+- [Node.js](https://nodejs.org/) (LTS recomendado) e npm
+- [MySQL](https://dev.mysql.com/doc/) em execução (local ou remoto)
+- Opcional: [Ionic CLI](https://ionicframework.com/docs/cli) (`npm install -g @ionic/cli`)
+
+## Configuração do banco de dados
+
+1. Crie o banco e um usuário com permissão (ajuste nomes e senhas conforme seu ambiente).
+
+2. Edite as credenciais em `backend/database/connections.ts`.
+
+3. Crie as tabelas esperadas pela API. O arquivo `backend/database/controle_atendimento.sql` pode estar vazio; use o script de exemplo abaixo como base:
+
+```sql
+CREATE DATABASE IF NOT EXISTS controle_atendimento
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+USE controle_atendimento;
+
+CREATE TABLE IF NOT EXISTS senha (
+  id_senha INT AUTO_INCREMENT PRIMARY KEY,
+  codigo_senha VARCHAR(255) NOT NULL,
+  tipo ENUM('SP', 'SE', 'SG') NOT NULL,
+  data_emissao DATE,
+  hora_emissao TIME,
+  status VARCHAR(32) NOT NULL DEFAULT 'emitida',
+  sequencial_dia INT,
+  id_cliente INT NULL,
+  INDEX idx_status (status),
+  INDEX idx_tipo (tipo)
+);
+
+CREATE TABLE IF NOT EXISTS painel_senhas (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  id_senha INT NOT NULL,
+  data_hora_chamada DATETIME NOT NULL,
+  FOREIGN KEY (id_senha) REFERENCES senha(id_senha)
+);
+```
+
+> **Nota:** na rota `POST /gerar-senha`, envie `id_cliente` conforme o seu modelo (número ou `null`).
+
+## Como executar
+
+### 1. Instalar dependências (raiz do repositório)
 
 ```bash
 npm install
 ```
 
-### Rodar em modo desenvolvimento
+### 2. Subir o servidor Express
+
+Na raiz (dependências `express`, `mysql2` e `ts-node` estão no `package.json` principal):
+
+```bash
+npx ts-node --project backend/tsconfig.json backend/server.ts
+```
+
+Confirme a mensagem indicando **http://localhost:3000**.
+
+Há também `src/server.ts`, que reexporta as mesmas rotas por outro caminho de import.
+
+### 3. Subir o aplicativo Ionic / Angular
+
+Em outro terminal:
 
 ```bash
 npm start
 ```
 
-Ou, se preferir usando Ionic:
+Abra **http://localhost:4200** (porta padrão do `ng serve`).
 
-```bash
-ionic serve
-```
-
-### Build de producao
+### Build de produção (frontend)
 
 ```bash
 npm run build
 ```
 
-### Executar testes
+Saída em `www/`.
+
+## API REST
+
+Base URL: `http://localhost:3000`
+
+| Método | Rota            | Descrição |
+|--------|-----------------|-----------|
+| `POST` | `/gerar-senha`  | Cria senha com status `emitida`. Corpo JSON: `{ "tipo": "SP" \| "SE" \| "SG", "id_cliente": <número ou null> }`. |
+| `GET`  | `/chamar-senha` | Próxima senha emitida: prioridade SP → SE → SG; empate no tipo resolve por **menor `id_senha`**. Atualiza para `chamada` e insere em `painel_senhas`. |
+| `GET`  | `/painel`       | Últimas 5 chamadas (join `painel_senhas` + `senha`), por `data_hora_chamada` decrescente. |
+
+Exemplos com [curl](https://curl.se/):
 
 ```bash
-npm test
+curl -X POST http://localhost:3000/gerar-senha \
+  -H "Content-Type: application/json" \
+  -d '{"tipo":"SP","id_cliente":1}'
 ```
-
-### Executar lint
 
 ```bash
-npm run lint
+curl http://localhost:3000/chamar-senha
 ```
 
-## Scripts disponiveis
+```bash
+curl http://localhost:3000/painel
+```
 
-- `npm start` - inicia servidor de desenvolvimento (`ng serve`)
-- `npm run build` - gera build de producao
-- `npm run watch` - build continuo em modo desenvolvimento
-- `npm test` - executa testes unitarios
-- `npm run lint` - executa analise estatica
+Se o frontend passar a chamar essa API a partir do navegador (origem diferente da porta 3000), configure **CORS** no Express; o código atual não inclui o middleware `cors`.
 
-## Melhorias futuras sugeridas
+## Aplicativo (telas)
 
-- persistencia de dados (LocalStorage, SQLite ou backend);
-- definicao real de guiche no registro do atendimento;
-- autenticacao por perfil (cliente/atendente/admin);
-- exportacao de relatorios (CSV/PDF);
-- testes automatizados cobrindo regras de prioridade da fila.
+Navegação por abas (`src/app/tabs/`):
 
-## Licenca
+| Aba        | Rota   | Função resumida |
+|------------|--------|-----------------|
+| Cliente    | `tab1` | Emissão de senha (Geral, Prioritária, Exame) — lógica em memória no `SenhaService`. |
+| Atendente  | `tab2` | Chama a próxima senha da fila em memória; o **guichê** selecionado na tela é o usado na chamada e na lista de recentes. |
+| Relatórios | `tab3` | Totais emitidos/atendidos, médias de tempo simuladas, últimas chamadas. |
 
-Projeto academico para fins de estudo.
+Formato da senha gerada no cliente: `AAMMDD-TIPO###` (ex.: `260402-SP001`).
+
+## Estrutura de pastas
+
+```
+MobileTicketsIonic/
+├── backend/
+│   ├── database/
+│   │   ├── connections.ts      # Pool MySQL (só Node / API)
+│   │   └── controle_atendimento.sql
+│   ├── routes/
+│   │   └── senhaRoutes.ts      # /gerar-senha, /chamar-senha, /painel
+│   ├── server.ts
+│   └── tsconfig.json
+├── src/
+│   ├── app/
+│   │   ├── services/senhas.ts  # SenhaService (memória; sem mysql no bundle)
+│   │   ├── tab1/ tab2/ tab3/
+│   │   └── tabs/
+│   ├── controllers/
+│   │   └── senhaController.ts  # Lógica de chamar senha (pode ser ligada ao Express)
+│   └── server.ts               # Servidor Express alternativo
+├── package.json
+└── README.md
+```
+
+## Scripts npm (frontend)
+
+| Script         | Comando                  |
+|----------------|--------------------------|
+| Desenvolvimento | `npm start` (`ng serve`) |
+| Build          | `npm run build`          |
+| Watch          | `npm run watch`          |
+| Testes         | `npm test`               |
+| Lint           | `npm run lint`           |
+
+O diretório `backend/` pode ter um `package.json` próprio; scripts de `start`/`dev` do servidor podem ser adicionados na raiz ou em `backend/` conforme sua organização.
+
+## Licença
+
+Projeto acadêmico para fins de estudo.

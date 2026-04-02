@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { SenhaService } from '../services/senhas';
 
 @Component({
@@ -12,10 +12,10 @@ export class Tab2Page {
   guiche: number = 1;
   senhaAtual: string = '';
 
-  constructor(public senhaService: SenhaService) {}
+  readonly senhaService = inject(SenhaService);
 
   chamar() {
-    const senhaComGuiche = this.senhaService.chamarSenhaPainel();
+    const senhaComGuiche = this.senhaService.chamarSenhaPainel(this.guiche);
 
     if (senhaComGuiche) {
       this.senhaAtual = senhaComGuiche;

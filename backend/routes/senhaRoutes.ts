@@ -39,7 +39,8 @@ router.get('/chamar-senha', async (req, res) => {
           WHEN tipo = 'SP' THEN 1
           WHEN tipo = 'SE' THEN 2
           WHEN tipo = 'SG' THEN 3
-        END
+        END,
+        id_senha ASC
       LIMIT 1
     `);
 

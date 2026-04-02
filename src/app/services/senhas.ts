@@ -1,21 +1,4 @@
 import { Injectable } from '@angular/core';
-import { db } from '../../../backend/database/connections';
-
-export async function buscarProximaSenha() {
-  const [rows]: any = await db.query(`
-    SELECT * FROM senha
-    WHERE status = 'emitida'
-    ORDER BY 
-      CASE 
-        WHEN tipo = 'SP' THEN 1
-        WHEN tipo = 'SE' THEN 2
-        WHEN tipo = 'SG' THEN 3
-      END
-    LIMIT 1
-  `);
-
-  return rows[0];
-}
 
 @Injectable({
   providedIn: 'root',
@@ -156,16 +139,16 @@ export class SenhaService {
     return null;
   }
 
-  chamarSenhaPainel(): string | null {
+  private tipoDaSenha(codigo: string): 'SP' | 'SE' | 'SG' {
+    const m = codigo.match(/-(SP|SE|SG)/);
+    return (m?.[1] as 'SP' | 'SE' | 'SG') ?? 'SG';
+  }
+
+  chamarSenhaPainel(guiche: number): string | null {
     const senha = this.chamarProximaSenha();
 
-    if (Math.random() <= 0.05) {
-      return this.chamarProximaSenha();
-    }
-
     if (senha) {
-      const tipo = senha.substring(7, 9) as 'SP' | 'SE' | 'SG';
-      const guiche = Math.floor(Math.random() * 3) + 1;
+      const tipo = this.tipoDaSenha(senha);
       const tempo = this.gerarTempoAtendimento(tipo);
 
       this.atendimentos.push({
@@ -177,8 +160,8 @@ export class SenhaService {
       });
 
       this.ultimasChamadas.push({
-        senha: senha,
-        guiche: guiche
+        senha,
+        guiche
       });
 
       if (this.ultimasChamadas.length > 5) {

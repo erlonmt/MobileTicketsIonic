@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { SenhaService } from '../services/senhas';
 
 @Component({
@@ -9,6 +9,6 @@ import { SenhaService } from '../services/senhas';
 })
 export class Tab3Page {
 
-  constructor(public senhasService: SenhaService) {}
+  readonly senhasService = inject(SenhaService);
 
 }

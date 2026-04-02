@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { SenhaService } from '../services/senhas';
 
 @Component({
@@ -11,20 +11,12 @@ export class Tab1Page {
 
   senhaGerada: string = '';
 
-  constructor(private senhaService: SenhaService) {}
+  private readonly senhaService = inject(SenhaService);
 
   pegarSenha(tipo: 'SP' | 'SG' | 'SE') {
     this.senhaGerada = '';
     this.senhaService.novaSenha(tipo);
-    let key = '';
-    if (tipo === 'SG') {
-      key = 'SG';
-    } else if (tipo === 'SP') {
-      key = 'SP';
-    } else if (tipo === 'SE') {
-      key = 'SE';
-    }
-    const arr = this.senhaService.senhaArray[key];
+    const arr = this.senhaService.senhaArray[tipo];
     if (arr && arr.length > 0) {
       this.senhaGerada = arr[arr.length - 1];
     }
