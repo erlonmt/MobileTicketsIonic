@@ -2,6 +2,14 @@
 
 Sistema de emissão e atendimento de senhas com interface **Ionic + Angular**, API **Node.js (Express)** e persistência em **MySQL**.
 
+## Equipe
+
+| Nome                                   | Matrícula |
+|----------------------------------------|----------|
+| Erlon Matheus de Andrade Oliveira      | 01797598 |
+| Cauã Vitor Oliveira Marques de Souza   | 01808325 |
+| João Vitor de Santana Pereira          | 01794895 |
+
 ## Sumário
 
 - [Visão geral](#visão-geral)
