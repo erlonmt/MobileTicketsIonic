@@ -7,8 +7,8 @@ Sistema de emissão e atendimento de senhas com interface **Ionic + Angular**, A
 | Nome                                   | Matrícula |
 |----------------------------------------|----------|
 | Erlon Matheus de Andrade Oliveira      | 01797598 |
-| Cauã Vitor Oliveira Marques de Souza   | 01808325 |
-| João Vitor de Santana Pereira          | 01794895 |
+| Cauã Vitor Oliveira Marques de Souza   | 01794895 |
+| João Vitor de Santana Pereira          | 01808325 |
 
 ## Sumário
 
