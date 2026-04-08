@@ -115,6 +115,23 @@ MobileTicketsIonic/
 | Testes            | `npm test`               |
 | Lint              | `npm run lint`           |
 
+## Aplicativo (Telas)
+
+<p align="center">
+  <img src="./assets/Cliente.png" width="30%"><br>
+  <b>Cliente</b>
+</p>
+
+<p align="center">
+  <img src="./assets/Atendente.png" width="30%"><br>
+  <b>Atendente</b>
+</p>
+
+<p align="center">
+  <img src="./assets/Relatorios.png" width="30%"><br>
+  <b>Relatórios</b>
+</p>
+
 ## Licença
 
 Projeto de caráter acadêmico, destinado a fins de estudo.
