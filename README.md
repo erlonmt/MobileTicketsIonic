@@ -118,17 +118,17 @@ MobileTicketsIonic/
 ## Aplicativo (Telas)
 
 <p align="center">
-  <img src="./assets/Cliente.png" width="30%"><br>
+  <img src="./src/assets/Cliente.png" width="30%"><br>
   <b>Cliente</b>
 </p>
 
 <p align="center">
-  <img src="./assets/Atendente.png" width="30%"><br>
+  <img src="./src/assets/Atendente.png" width="30%"><br>
   <b>Atendente</b>
 </p>
 
 <p align="center">
-  <img src="./assets/Relatorios.png" width="30%"><br>
+  <img src="./src/assets/Relatorios.png" width="30%"><br>
   <b>Relatórios</b>
 </p>
 
