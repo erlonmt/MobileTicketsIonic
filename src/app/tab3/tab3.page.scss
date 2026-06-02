@@ -1,117 +1,133 @@
+:host {
+  --line: #dfe7ef;
+  --muted: #667085;
+}
+
+ion-segment {
+  margin-bottom: 12px;
+}
+
 ion-card {
   background: #fff;
-  border-radius: 18px;
-  box-shadow: 0 2px 10px #00448a10;
-  margin-bottom: 22px;
-  border: none;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(23, 43, 77, 0.06);
+  margin: 0 0 12px;
 }
 
 ion-card-header {
-  background: #f5f8fa;
-  border-radius: 18px 18px 0 0;
-  border-bottom: 1px solid #e7ecef;
-  padding: 18px 16px 10px;
-  display: flex;
+  background: #f8fafc;
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+}
+
+ion-card-subtitle,
+.empty-state,
+.type-row span,
+.type-row small,
+.metric-grid span {
+  color: var(--muted);
+}
+
+.metric-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.metric-grid div {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.metric-grid span,
+.type-row small {
+  display: block;
+  font-size: 0.78rem;
+}
+
+.metric-grid strong {
+  color: #14345a;
+  display: block;
+  font-size: 1.7rem;
+  margin-top: 3px;
+}
+
+.type-row {
   align-items: center;
-  gap: 10px;
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1.2fr repeat(3, 0.8fr);
+  padding: 11px 0;
 }
 
-ion-card-header span {
-  font-size: 1.05em;
-  font-weight: 600;
+.type-row:last-child {
+  border-bottom: 0;
 }
 
-ion-card-header div {
-  font-size: 0.95em;
-  color: #888;
+.type-row b,
+.type-row strong {
+  color: #1f2937;
 }
 
-ion-icon[name="stats-chart-outline"],
-ion-icon[name="megaphone-outline"] {
-  font-size: 1.4em;
-  vertical-align: middle;
-  margin-right: 10px;
+.table-scroll {
+  overflow-x: auto;
 }
 
-ion-card-content {
-  padding: 14px 8px 2px 8px;
+table {
+  border-collapse: collapse;
+  min-width: 690px;
+  width: 100%;
 }
 
-ion-card-content > div {
-  margin-bottom: 18px;
+th,
+td {
+  border-bottom: 1px solid var(--line);
+  padding: 10px 8px;
+  text-align: left;
+  white-space: nowrap;
 }
 
-ion-card-content > div:last-child {
-  margin-bottom: 0;
+th {
+  color: #475467;
+  font-size: 0.78rem;
+  text-transform: uppercase;
 }
 
-ion-card-content > div > div:first-child {
-  font-size: 1em;
-  font-weight: bold;
-  margin-bottom: 6px;
-  display: flex;
-  align-items: center;
-  gap: 7px;
+.status-chip {
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 8px;
 }
 
-ion-card-content > div > div {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 0;
-  align-items: center;
+.status-atendida {
+  background: #ddf7ed;
+  color: #0e5f49;
 }
 
-ion-card-content > div > div span:first-child {
-  color: #405167;
+.status-descartada {
+  background: #fde8e8;
+  color: #9b1c1c;
 }
 
-ion-card-content > div > div span:last-child {
-  font-weight: 600;
-  color: #21436d;
+.status-aguardando {
+  background: #eef2ff;
+  color: #3730a3;
 }
 
-ion-card-content .senha-lista {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 0;
-  border-bottom: 1px solid #eceff2;
-}
-
-ion-card-content .senha-lista:last-child {
-  border-bottom: none;
-}
-
-.senha-guiche-badge {
-  font-size: 1em;
-  background: #d6e4fa;
-  color: #23456a;
-  padding: 4px 12px;
-  border-radius: 20px;
-}
-
-.sem-chamadas {
-  font-size: 1em;
-  color: #999;
+.empty-state {
+  padding: 20px 8px;
   text-align: center;
-  margin: 14px 0;
 }
 
-@media (max-width: 600px) {
-  ion-card,
-  ion-card-header {
-    border-radius: 10px !important;
-  }
-  ion-card-header {
-    padding-top: 12px;
-    padding-bottom: 8px;
-  }
-  ion-icon[name="stats-chart-outline"],
-  ion-icon[name="megaphone-outline"] {
-    font-size: 1.1em;
-    margin-right: 7px;
-  }
-  ion-card-content > div > div {
-    padding: 6px 0;
+@media (max-width: 520px) {
+  .type-row {
+    grid-template-columns: 1fr 1fr;
   }
 }

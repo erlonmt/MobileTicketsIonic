@@ -1,8 +1,8 @@
 {
-  "name": "lista3",
+  "name": "MobileTicketsIonic",
   "version": "0.0.1",
   "author": "Ionic Framework",
-  "homepage": "https://ionicframework.com/",
+  "homepage": "",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -65,8 +65,8 @@
     "ts-node": "^10.9.2",
     "typescript": "~5.9.0"
   },
-  "description": "An Ionic project",
+  "description": "Sistema Ionic de controle de atendimento por senhas",
   "main": "karma.conf.js",
   "keywords": [],
-  "license": "ISC"
+  "license": "MIT"
 }

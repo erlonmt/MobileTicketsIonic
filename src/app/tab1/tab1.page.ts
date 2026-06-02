@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { SenhaService } from '../services/senhas';
+import { SenhaRegistro, SenhaService, TipoSenha } from '../services/senhas';
 
 @Component({
   selector: 'app-tab1',
@@ -9,16 +9,25 @@ import { SenhaService } from '../services/senhas';
 })
 export class Tab1Page {
 
-  senhaGerada: string = '';
+  senhaGerada: SenhaRegistro | null = null;
+  mensagem = 'Selecione um tipo de atendimento';
 
-  private readonly senhaService = inject(SenhaService);
+  readonly senhaService = inject(SenhaService);
 
-  pegarSenha(tipo: 'SP' | 'SG' | 'SE') {
-    this.senhaGerada = '';
-    this.senhaService.novaSenha(tipo);
-    const arr = this.senhaService.senhaArray[tipo];
-    if (arr && arr.length > 0) {
-      this.senhaGerada = arr[arr.length - 1];
+  pegarSenha(tipo: TipoSenha): void {
+    const senha = this.senhaService.novaSenha(tipo);
+
+    if (!senha) {
+      this.senhaGerada = null;
+      this.mensagem = 'Expediente encerrado. As senhas restantes foram descartadas.';
+      return;
     }
+
+    this.senhaGerada = senha;
+    this.mensagem = `Senha ${senha.codigo} emitida às ${this.formatarHora(senha.dataEmissao)}`;
+  }
+
+  private formatarHora(data: Date): string {
+    return data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   }
 }

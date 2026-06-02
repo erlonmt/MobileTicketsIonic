@@ -1,202 +1,447 @@
 import { Injectable } from '@angular/core';
 
+export type TipoSenha = 'SP' | 'SE' | 'SG';
+export type StatusSenha = 'aguardando' | 'atendida' | 'descartada';
+
+export interface TotaisPorTipo {
+  SP: number;
+  SE: number;
+  SG: number;
+}
+
+export interface FilasSenhas {
+  SP: string[];
+  SE: string[];
+  SG: string[];
+}
+
+export interface SenhaRegistro {
+  codigo: string;
+  tipo: TipoSenha;
+  sequencia: number;
+  dataEmissao: Date;
+  dataAtendimento: Date | null;
+  guiche: number | null;
+  tempoAtendimento: number | null;
+  status: StatusSenha;
+  motivoDescarte: string | null;
+  descartarSemAtendimento: boolean;
+}
+
+export interface ChamadaPainel {
+  codigo: string;
+  tipo: TipoSenha;
+  guiche: number;
+  horaAtendimento: Date;
+  tempoAtendimento: number;
+}
+
+export interface ResumoRelatorio {
+  titulo: string;
+  periodo: string;
+  totalEmitidas: number;
+  totalAtendidas: number;
+  totalDescartadas: number;
+  totalAguardando: number;
+  emitidasPorTipo: TotaisPorTipo;
+  atendidasPorTipo: TotaisPorTipo;
+  temposMediosPorTipo: TotaisPorTipo;
+  registros: SenhaRegistro[];
+}
+
+interface FilasRegistros {
+  SP: SenhaRegistro[];
+  SE: SenhaRegistro[];
+  SG: SenhaRegistro[];
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class SenhaService {
 
-  public senhasGeral: number = 0;
-  public senhasPrior: number = 0;
-  public senhasExame: number = 0;
-  public senhasTotal: number = 0;
+  readonly inicioExpediente = 7;
+  readonly fimExpediente = 17;
+  readonly tipos: TipoSenha[] = ['SP', 'SE', 'SG'];
 
-  public senhaArray: { [key: string]: string[] } = {
-    SP: [],
-    SE: [],
-    SG: [],
-  };
+  public horarioAtual: Date = this.criarHorarioDoDia(new Date(), this.inicioExpediente);
+  public ultimasChamadas: ChamadaPainel[] = [];
+  public atendimentos: ChamadaPainel[] = [];
+  public emissoes: SenhaRegistro[] = [];
+  public registros: SenhaRegistro[] = [];
 
-  public ultimasChamadas: {
-    senha: string,
-    guiche: number
-  }[] = [];
-  
-  public atendimentos: {
-    senha: string,
-    tipo: string,
-    guiche: number,
-    tempo: number,
-    horaAtendimento: Date
-  }[] = [];
+  private expedienteAberto = true;
+  private ultimoTipoChamado: TipoSenha | null = null;
+  private sequencias: TotaisPorTipo = this.criarTotaisZerados();
+  private filas: FilasRegistros = this.criarFilasVazias();
 
-  public emissoes: {
-    senha: string,
-    tipo: string,
-    horaEmissao: Date
-  }[] = [];
-
-  public atendidosPorTipo: { [key: string]: number } = {
-    SP: 0,
-    SE: 0,
-    SG: 0,
-  };
-
-  private ultimoTipoChamado: 'SP' | 'SE' | 'SG' | null = null;
-
-  private somaGeral() {
-    this.senhasGeral++;
-    this.senhasTotal++; 
+  get expedienteAtivo(): boolean {
+    return this.expedienteAberto && this.horarioAtual.getTime() < this.fimDoExpediente.getTime();
   }
 
-  private somaPrior() {
-    this.senhasPrior++;
-    this.senhasTotal++;
+  get statusExpediente(): string {
+    if (this.expedienteAtivo) {
+      return 'Aberto';
+    }
+
+    return 'Encerrado';
   }
 
-  private somaExame() {
-    this.senhasExame++;
-    this.senhasTotal++;
+  get senhaArray(): FilasSenhas {
+    return {
+      SP: this.filas.SP.map((senha) => senha.codigo),
+      SE: this.filas.SE.map((senha) => senha.codigo),
+      SG: this.filas.SG.map((senha) => senha.codigo),
+    };
   }
 
-  novaSenha(tipoSenha: 'SP' | 'SG' | 'SE'): string {
-    if (tipoSenha === 'SG') this.somaGeral();
-    if (tipoSenha === 'SP') this.somaPrior();
-    if (tipoSenha === 'SE') this.somaExame();
+  get senhasTotal(): number {
+    return this.registros.length;
+  }
 
-    const now = new Date();
-    const prefix = tipoSenha;
+  get senhasGeral(): number {
+    return this.totalEmitidasPorTipo('SG');
+  }
 
-    const senha =
-      now.getFullYear().toString().substring(2, 4) +
-      (now.getMonth() + 1).toString().padStart(2, '0') +
-      now.getDate().toString().padStart(2, '0') +
-      '-' +
-      prefix +
-      (this.senhaArray[tipoSenha].length + 1)
-        .toString()
-        .padStart(3, '0');
+  get senhasPrior(): number {
+    return this.totalEmitidasPorTipo('SP');
+  }
 
-    this.senhaArray[tipoSenha].push(senha);
+  get senhasExame(): number {
+    return this.totalEmitidasPorTipo('SE');
+  }
 
-    this.emissoes.push({
-      senha,
+  get atendidosPorTipo(): TotaisPorTipo {
+    return this.montarTotaisPorStatus('atendida');
+  }
+
+  get pendentesPorTipo(): TotaisPorTipo {
+    return this.montarTotaisPorStatus('aguardando');
+  }
+
+  get descartadasPorTipo(): TotaisPorTipo {
+    return this.montarTotaisPorStatus('descartada');
+  }
+
+  novaSenha(tipoSenha: TipoSenha): SenhaRegistro | null {
+    this.verificarEncerramentoAutomatico();
+
+    if (!this.expedienteAtivo) {
+      return null;
+    }
+
+    this.sequencias[tipoSenha] += 1;
+
+    const registro: SenhaRegistro = {
+      codigo: this.gerarCodigoSenha(tipoSenha, this.sequencias[tipoSenha]),
       tipo: tipoSenha,
-      horaEmissao: new Date()
-    });
+      sequencia: this.sequencias[tipoSenha],
+      dataEmissao: new Date(this.horarioAtual),
+      dataAtendimento: null,
+      guiche: null,
+      tempoAtendimento: null,
+      status: 'aguardando',
+      motivoDescarte: null,
+      descartarSemAtendimento: this.deveDescartarSemAtendimento(),
+    };
 
-    return senha;
+    this.registros.push(registro);
+    this.emissoes.push(registro);
+    this.filas[tipoSenha].push(registro);
+    this.avancarRelogio(1);
+
+    return registro;
   }
 
-  chamarProximaSenha(): string | null {
-    const filaSP = this.senhaArray['SP'];
-    const filaSE = this.senhaArray['SE'];
-    const filaSG = this.senhaArray['SG'];
+  chamarSenhaPainel(guiche: number): ChamadaPainel | null {
+    this.verificarEncerramentoAutomatico();
 
-    let senhaSelecionada: string | undefined;
-    let tipoSelecionado: 'SP' | 'SE' | 'SG' | null = null;
+    if (!this.expedienteAtivo) {
+      return null;
+    }
 
-    if (!this.ultimoTipoChamado) {
-      if (filaSP.length > 0) {
-        tipoSelecionado = 'SP';
-        senhaSelecionada = filaSP.shift();
-      } else if (filaSE.length > 0) {
-        tipoSelecionado = 'SE';
-        senhaSelecionada = filaSE.shift();
-      } else if (filaSG.length > 0) {
-        tipoSelecionado = 'SG';
-        senhaSelecionada = filaSG.shift();
-      }
-    } else if (this.ultimoTipoChamado === 'SP') {
-      if (filaSE.length > 0) {
-        tipoSelecionado = 'SE';
-        senhaSelecionada = filaSE.shift();
-      } else if (filaSG.length > 0) {
-        tipoSelecionado = 'SG';
-        senhaSelecionada = filaSG.shift();
-      } else if (filaSP.length > 0) {
-        tipoSelecionado = 'SP';
-        senhaSelecionada = filaSP.shift();
-      }
-    } else {
-      if (filaSP.length > 0) {
-        tipoSelecionado = 'SP';
-        senhaSelecionada = filaSP.shift();
-      } else if (filaSE.length > 0) {
-        tipoSelecionado = 'SE';
-        senhaSelecionada = filaSE.shift();
-      } else if (filaSG.length > 0) {
-        tipoSelecionado = 'SG';
-        senhaSelecionada = filaSG.shift();
+    const senhaSelecionada = this.selecionarProximaSenha();
+
+    if (!senhaSelecionada) {
+      return null;
+    }
+
+    const tempoAtendimento = this.gerarTempoAtendimento(senhaSelecionada.tipo);
+    const horaAtendimento = new Date(this.horarioAtual);
+
+    senhaSelecionada.status = 'atendida';
+    senhaSelecionada.guiche = guiche;
+    senhaSelecionada.tempoAtendimento = tempoAtendimento;
+    senhaSelecionada.dataAtendimento = horaAtendimento;
+    this.ultimoTipoChamado = senhaSelecionada.tipo;
+
+    const chamada: ChamadaPainel = {
+      codigo: senhaSelecionada.codigo,
+      tipo: senhaSelecionada.tipo,
+      guiche,
+      horaAtendimento,
+      tempoAtendimento,
+    };
+
+    this.atendimentos.push(chamada);
+    this.ultimasChamadas.unshift(chamada);
+    this.ultimasChamadas = this.ultimasChamadas.slice(0, 5);
+
+    this.avancarRelogio(tempoAtendimento);
+
+    return chamada;
+  }
+
+  encerrarExpediente(): void {
+    if (!this.expedienteAberto && this.totalAguardando() === 0) {
+      return;
+    }
+
+    for (const tipo of this.tipos) {
+      for (const senha of this.filas[tipo]) {
+        if (senha.status === 'aguardando') {
+          this.descartarSenha(senha, 'Expediente encerrado às 17:00');
+        }
       }
     }
 
-    if (senhaSelecionada && tipoSelecionado) {
-      this.ultimoTipoChamado = tipoSelecionado;
-      this.atendidosPorTipo[tipoSelecionado]++;
-      return senhaSelecionada;
+    this.filas = this.criarFilasVazias();
+    this.expedienteAberto = false;
+    this.horarioAtual = new Date(this.fimDoExpediente);
+  }
+
+  iniciarNovoExpediente(): void {
+    this.encerrarExpediente();
+
+    const proximoDia = new Date(this.horarioAtual);
+    proximoDia.setDate(proximoDia.getDate() + 1);
+    this.horarioAtual = this.criarHorarioDoDia(proximoDia, this.inicioExpediente);
+    this.sequencias = this.criarTotaisZerados();
+    this.filas = this.criarFilasVazias();
+    this.ultimoTipoChamado = null;
+    this.expedienteAberto = true;
+  }
+
+  mediaTempo(tipo: TipoSenha | string): number {
+    if (!this.ehTipoSenha(tipo)) {
+      return 0;
+    }
+
+    return this.calcularMediaTempo(this.registros, tipo);
+  }
+
+  getTotalAtendidosPorTipo(tipo: TipoSenha): number {
+    return this.atendidosPorTipo[tipo];
+  }
+
+  getTotalAtendimentos(): number {
+    return this.registros.filter((senha) => senha.status === 'atendida').length;
+  }
+
+  getResumoDiario(): ResumoRelatorio {
+    const registros = this.registros.filter((senha) => this.mesmoDia(senha.dataEmissao, this.horarioAtual));
+    return this.montarResumo('Relatório diário', this.formatarDataCurta(this.horarioAtual), registros);
+  }
+
+  getResumoMensal(): ResumoRelatorio {
+    const registros = this.registros.filter((senha) => this.mesmoMes(senha.dataEmissao, this.horarioAtual));
+    return this.montarResumo('Relatório mensal', this.formatarMesAno(this.horarioAtual), registros);
+  }
+
+  totalAguardando(): number {
+    return this.registros.filter((senha) => senha.status === 'aguardando').length;
+  }
+
+  gerarTempoAtendimento(tipo: TipoSenha): number {
+    if (tipo === 'SP') {
+      return this.randomEntre(10, 20);
+    }
+
+    if (tipo === 'SG') {
+      return this.randomEntre(2, 8);
+    }
+
+    return Math.random() <= 0.95 ? 1 : 5;
+  }
+
+  private selecionarProximaSenha(): SenhaRegistro | null {
+    const ordem = this.ordemDeChamada();
+
+    for (const tipo of ordem) {
+      const senha = this.retirarProximaSenhaAtendivel(tipo);
+
+      if (senha) {
+        return senha;
+      }
     }
 
     return null;
   }
 
-  private tipoDaSenha(codigo: string): 'SP' | 'SE' | 'SG' {
-    const m = codigo.match(/-(SP|SE|SG)/);
-    return (m?.[1] as 'SP' | 'SE' | 'SG') ?? 'SG';
-  }
+  private retirarProximaSenhaAtendivel(tipo: TipoSenha): SenhaRegistro | null {
+    const fila = this.filas[tipo];
 
-  chamarSenhaPainel(guiche: number): string | null {
-    const senha = this.chamarProximaSenha();
+    while (fila.length > 0) {
+      const senha = fila.shift();
 
-    if (senha) {
-      const tipo = this.tipoDaSenha(senha);
-      const tempo = this.gerarTempoAtendimento(tipo);
-
-      this.atendimentos.push({
-        senha,
-        tipo,
-        guiche,
-        tempo,
-        horaAtendimento: new Date()
-      });
-
-      this.ultimasChamadas.push({
-        senha,
-        guiche
-      });
-
-      if (this.ultimasChamadas.length > 5) {
-        this.ultimasChamadas.shift();
+      if (!senha || senha.status !== 'aguardando') {
+        continue;
       }
 
-      return `Senha: ${senha} - Guichê: ${guiche}`;
+      if (senha.descartarSemAtendimento) {
+        this.descartarSenha(senha, 'Cliente não compareceu ao guichê');
+        continue;
+      }
+
+      return senha;
     }
 
     return null;
+  }
+
+  private ordemDeChamada(): TipoSenha[] {
+    if (this.ultimoTipoChamado === 'SP') {
+      return ['SE', 'SG', 'SP'];
+    }
+
+    return ['SP', 'SE', 'SG'];
+  }
+
+  private descartarSenha(senha: SenhaRegistro, motivo: string): void {
+    senha.status = 'descartada';
+    senha.guiche = null;
+    senha.tempoAtendimento = null;
+    senha.dataAtendimento = null;
+    senha.motivoDescarte = motivo;
+  }
+
+  private montarResumo(titulo: string, periodo: string, registros: SenhaRegistro[]): ResumoRelatorio {
+    const registrosOrdenados = [...registros].sort((a, b) => b.dataEmissao.getTime() - a.dataEmissao.getTime());
+
+    return {
+      titulo,
+      periodo,
+      totalEmitidas: registros.length,
+      totalAtendidas: registros.filter((senha) => senha.status === 'atendida').length,
+      totalDescartadas: registros.filter((senha) => senha.status === 'descartada').length,
+      totalAguardando: registros.filter((senha) => senha.status === 'aguardando').length,
+      emitidasPorTipo: this.montarTotais(registros),
+      atendidasPorTipo: this.montarTotais(registros.filter((senha) => senha.status === 'atendida')),
+      temposMediosPorTipo: {
+        SP: this.calcularMediaTempo(registros, 'SP'),
+        SE: this.calcularMediaTempo(registros, 'SE'),
+        SG: this.calcularMediaTempo(registros, 'SG'),
+      },
+      registros: registrosOrdenados,
+    };
+  }
+
+  private montarTotais(registros: SenhaRegistro[]): TotaisPorTipo {
+    const totais = this.criarTotaisZerados();
+
+    for (const senha of registros) {
+      totais[senha.tipo] += 1;
+    }
+
+    return totais;
+  }
+
+  private montarTotaisPorStatus(status: StatusSenha): TotaisPorTipo {
+    return this.montarTotais(this.registros.filter((senha) => senha.status === status));
+  }
+
+  private totalEmitidasPorTipo(tipo: TipoSenha): number {
+    return this.registros.filter((senha) => senha.tipo === tipo).length;
+  }
+
+  private calcularMediaTempo(registros: SenhaRegistro[], tipo: TipoSenha): number {
+    const atendidas = registros.filter((senha) => senha.tipo === tipo && senha.tempoAtendimento !== null);
+
+    if (atendidas.length === 0) {
+      return 0;
+    }
+
+    const soma = atendidas.reduce((total, senha) => total + (senha.tempoAtendimento ?? 0), 0);
+    return Number((soma / atendidas.length).toFixed(1));
+  }
+
+  private gerarCodigoSenha(tipo: TipoSenha, sequencia: number): string {
+    return `${this.formatarDataCodigo(this.horarioAtual)}-${tipo}${sequencia.toString().padStart(3, '0')}`;
+  }
+
+  private formatarDataCodigo(data: Date): string {
+    const ano = data.getFullYear().toString().slice(-2);
+    const mes = (data.getMonth() + 1).toString().padStart(2, '0');
+    const dia = data.getDate().toString().padStart(2, '0');
+
+    return `${ano}${mes}${dia}`;
+  }
+
+  private formatarDataCurta(data: Date): string {
+    const dia = data.getDate().toString().padStart(2, '0');
+    const mes = (data.getMonth() + 1).toString().padStart(2, '0');
+    const ano = data.getFullYear();
+
+    return `${dia}/${mes}/${ano}`;
+  }
+
+  private formatarMesAno(data: Date): string {
+    const mes = (data.getMonth() + 1).toString().padStart(2, '0');
+    const ano = data.getFullYear();
+
+    return `${mes}/${ano}`;
+  }
+
+  private avancarRelogio(minutos: number): void {
+    this.horarioAtual = new Date(this.horarioAtual.getTime() + minutos * 60_000);
+    this.verificarEncerramentoAutomatico();
+  }
+
+  private verificarEncerramentoAutomatico(): void {
+    if (this.expedienteAberto && this.horarioAtual.getTime() >= this.fimDoExpediente.getTime()) {
+      this.encerrarExpediente();
+    }
+  }
+
+  private get fimDoExpediente(): Date {
+    return this.criarHorarioDoDia(this.horarioAtual, this.fimExpediente);
+  }
+
+  private deveDescartarSemAtendimento(): boolean {
+    const numeroDaEmissao = this.registros.length + 1;
+    return numeroDaEmissao % 20 === 0;
   }
 
   private randomEntre(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
-  gerarTempoAtendimento(tipo: 'SP' | 'SG' | 'SE'): number {
-    if (tipo === 'SP') return this.randomEntre(10, 20);
-    if (tipo === 'SG') return this.randomEntre(2, 8);
-    if (tipo === 'SE') return Math.random() <= 0.95 ? 1 : 5;
-    return 0;
+  private mesmoDia(a: Date, b: Date): boolean {
+    return a.getFullYear() === b.getFullYear()
+      && a.getMonth() === b.getMonth()
+      && a.getDate() === b.getDate();
   }
 
-  mediaTempo(tipo: string): number {
-    const lista = this.atendimentos.filter(a => a.tipo === tipo);
-    if (lista.length === 0) return 0;
-    const soma = lista.reduce((acc, item) => acc + item.tempo, 0);
-    return +(soma / lista.length).toFixed(1);
+  private mesmoMes(a: Date, b: Date): boolean {
+    return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
   }
 
-  getTotalAtendidosPorTipo(tipo: 'SP' | 'SE' | 'SG'): number {
-    return this.atendidosPorTipo[tipo] || 0;
+  private criarHorarioDoDia(data: Date, hora: number): Date {
+    const horario = new Date(data);
+    horario.setHours(hora, 0, 0, 0);
+
+    return horario;
   }
 
-  getTotalAtendimentos(): number {
-    return Object.values(this.atendidosPorTipo).reduce((acc, val) => acc + val, 0);
+  private criarTotaisZerados(): TotaisPorTipo {
+    return { SP: 0, SE: 0, SG: 0 };
+  }
+
+  private criarFilasVazias(): FilasRegistros {
+    return { SP: [], SE: [], SG: [] };
+  }
+
+  private ehTipoSenha(valor: string): valor is TipoSenha {
+    return valor === 'SP' || valor === 'SE' || valor === 'SG';
   }
 }

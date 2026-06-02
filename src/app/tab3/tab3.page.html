@@ -1,104 +1,139 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>Relatório de Senhas</ion-title>
+    <ion-title>Relatórios</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" class="ion-padding">
+  <ion-segment [(ngModel)]="periodoSelecionado">
+    <ion-segment-button value="diario">
+      <ion-label>Diário</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="mensal">
+      <ion-label>Mensal</ion-label>
+    </ion-segment-button>
+  </ion-segment>
 
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Relatório de Senhas</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <ng-container *ngIf="resumoAtual as resumo">
+    <ion-card>
+      <ion-card-header>
+        <ion-icon name="stats-chart-outline" size="large" color="primary"></ion-icon>
+        <ion-card-title>{{ resumo.titulo }}</ion-card-title>
+        <ion-card-subtitle>{{ resumo.periodo }}</ion-card-subtitle>
+      </ion-card-header>
 
-  <ion-card>
-    <ion-card-header>
-      <ion-icon name="stats-chart-outline" size="large" color="primary"></ion-icon>
-      <span>Resumo Geral</span>
-      <div>Total de Senhas Emitidas e Estatísticas</div>
-    </ion-card-header>
-    <ion-card-content>
-      <div>
-        <div>
-          <span><strong>Total Emitidas</strong></span>
-          <span>{{ senhasService.senhasTotal }}</span>
+      <ion-card-content>
+        <div class="metric-grid">
+          <div>
+            <span>Emitidas</span>
+            <strong>{{ resumo.totalEmitidas }}</strong>
+          </div>
+          <div>
+            <span>Atendidas</span>
+            <strong>{{ resumo.totalAtendidas }}</strong>
+          </div>
+          <div>
+            <span>Descartadas</span>
+            <strong>{{ resumo.totalDescartadas }}</strong>
+          </div>
+          <div>
+            <span>Aguardando</span>
+            <strong>{{ resumo.totalAguardando }}</strong>
+          </div>
         </div>
-        <div>
-          <span>Senhas Gerais</span>
-          <span>{{ senhasService.senhasGeral }}</span>
-        </div>
-        <div>
-          <span>Senhas Prioritárias</span>
-          <span>{{ senhasService.senhasPrior }}</span>
-        </div>
-        <div>
-          <span>Senhas para Exame</span>
-          <span>{{ senhasService.senhasExame }}</span>
-        </div>
-      </div>
-      <div>
-        <div>
-          <ion-icon name="podium-outline" color="dark"></ion-icon>
-          <span>Atendimentos Realizados</span>
-        </div>
-        <div>
-          <span>Total de Atendimentos</span>
-          <span>{{ senhasService.getTotalAtendimentos() }}</span>
-        </div>
-        <div>
-          <span>Geral Atendidos</span>
-          <span>{{ senhasService.getTotalAtendidosPorTipo('SG') }}</span>
-        </div>
-        <div>
-          <span>Prioritária Atendidos</span>
-          <span>{{ senhasService.getTotalAtendidosPorTipo('SP') }}</span>
-        </div>
-        <div>
-          <span>Exame Atendidos</span>
-          <span>{{ senhasService.getTotalAtendidosPorTipo('SE') }}</span>
-        </div>
-      </div>
-      <div>
-        <div>
-          <ion-icon name="timer-outline" color="dark"></ion-icon>
-          <span>Média Tempo Atendimento (min)</span>
-        </div>
-        <div>
-          <span>Prioritária</span>
-          <span>{{ senhasService.mediaTempo('SP') }}</span>
-        </div>
-        <div>
-          <span>Geral</span>
-          <span>{{ senhasService.mediaTempo('SG') }}</span>
-        </div>
-        <div>
-          <span>Exame</span>
-          <span>{{ senhasService.mediaTempo('SE') }}</span>
-        </div>
-      </div>
-    </ion-card-content>
-  </ion-card>
+      </ion-card-content>
+    </ion-card>
 
-  <ion-card>
-    <ion-card-header>
-      <ion-icon name="megaphone-outline" color="medium"></ion-icon>
-      <span>Últimas Senhas Chamadas</span>
-    </ion-card-header>
-    <ion-card-content>
-      <div *ngIf="senhasService.ultimasChamadas.length > 0; else semChamadas">
-        <div *ngFor="let chamada of senhasService.ultimasChamadas">
-          <span>{{ chamada.senha }}</span>
-          <span>
-            Guichê {{ chamada.guiche }}
-          </span>
+    <ion-card>
+      <ion-card-header>
+        <ion-icon name="layers-outline" size="large" color="primary"></ion-icon>
+        <ion-card-title>Quantitativos por Tipo</ion-card-title>
+      </ion-card-header>
+
+      <ion-card-content>
+        <div class="type-row" *ngFor="let tipo of tipos">
+          <div>
+            <strong>{{ tipo.codigo }}</strong>
+            <span>{{ tipo.nome }}</span>
+          </div>
+          <div>
+            <small>Emitidas</small>
+            <b>{{ resumo.emitidasPorTipo[tipo.codigo] }}</b>
+          </div>
+          <div>
+            <small>Atendidas</small>
+            <b>{{ resumo.atendidasPorTipo[tipo.codigo] }}</b>
+          </div>
+          <div>
+            <small>TM</small>
+            <b>{{ resumo.temposMediosPorTipo[tipo.codigo] }} min</b>
+          </div>
         </div>
-      </div>
-      <ng-template #semChamadas>
-        <div>
-          Nenhuma senha chamada ainda.
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card>
+      <ion-card-header>
+        <ion-icon name="document-text-outline" size="large" color="primary"></ion-icon>
+        <ion-card-title>Relatório Detalhado</ion-card-title>
+      </ion-card-header>
+
+      <ion-card-content>
+        <div class="table-scroll" *ngIf="resumo.registros.length > 0; else semRegistros">
+          <table>
+            <thead>
+              <tr>
+                <th>Senha</th>
+                <th>Tipo</th>
+                <th>Emissão</th>
+                <th>Atendimento</th>
+                <th>Guichê</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let senha of resumo.registros">
+                <td>{{ senha.codigo }}</td>
+                <td>{{ senha.tipo }}</td>
+                <td>{{ senha.dataEmissao | date:'dd/MM HH:mm' }}</td>
+                <td>{{ senha.dataAtendimento | date:'dd/MM HH:mm' }}</td>
+                <td>{{ senha.guiche !== null ? senha.guiche : '' }}</td>
+                <td>
+                  <span class="status-chip" [ngClass]="classeStatus(senha.status)">
+                    {{ rotuloStatus(senha.status) }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-      </ng-template>
-    </ion-card-content>
-  </ion-card>
+
+        <ng-template #semRegistros>
+          <div class="empty-state">Nenhuma senha emitida no período.</div>
+        </ng-template>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card>
+      <ion-card-header>
+        <ion-icon name="megaphone-outline" size="large" color="primary"></ion-icon>
+        <ion-card-title>Últimas Chamadas</ion-card-title>
+      </ion-card-header>
+
+      <ion-card-content>
+        <ion-list lines="full" *ngIf="senhasService.ultimasChamadas.length > 0; else semChamadas">
+          <ion-item *ngFor="let chamada of senhasService.ultimasChamadas">
+            <ion-label>
+              <strong>{{ chamada.codigo }}</strong>
+              <p>Guichê {{ chamada.guiche }} · {{ chamada.horaAtendimento | date:'HH:mm' }} · {{ chamada.tempoAtendimento }} min</p>
+            </ion-label>
+          </ion-item>
+        </ion-list>
+
+        <ng-template #semChamadas>
+          <div class="empty-state">Nenhuma senha chamada ainda.</div>
+        </ng-template>
+      </ion-card-content>
+    </ion-card>
+  </ng-container>
 </ion-content>

@@ -1,137 +1,116 @@
-# Mobile Tickets Ionic
+# MobileTicketsIonic
 
-Sistema de emissão e atendimento de senhas utilizando **Ionic + Angular** no frontend, simulando filas inteiramente em memória para fins acadêmicos.
+Aplicativo Ionic para controle de atendimento por senhas em filas de laboratório médico. O projeto foi desenvolvido com **Ionic + Angular**, template **tabs**, estrutura **Angular com ngModules** e integração **Capacitor**.
 
 ## Equipe
 
-| Nome                                   | Matrícula |
-|-----------------------------------------|-----------|
-| Erlon Matheus de Andrade Oliveira      | 01797598  |
-| Cauã Vitor Oliveira Marques de Souza   | 01794895  |
-| João Vitor de Santana Pereira          | 01808325  |
+| Nome | Matrícula |
+|---|---|
+| Erlon Matheus de Andrade Oliveira | 01797598 |
+| Cauã Vitor Oliveira Marques de Souza | 01794895 |
+| João Vitor de Santana Pereira | 01808325 |
 
-## Sumário
+## Objetivo
 
-- [Visão Geral](#visão-geral)
-- [Arquitetura](#arquitetura)
-- [Requisitos](#requisitos)
-- [Como Executar](#como-executar)
-- [Aplicativo (Telas)](#aplicativo-telas)
-- [Estrutura de Pastas](#estrutura-de-pastas)
-- [Scripts npm (Frontend)](#scripts-npm-frontend)
+Simular o fluxo de emissão, chamada e relatório de senhas do sistema de atendimento descrito na Fase 2 do projeto mobile. O app funciona em memória, sem banco de dados, permitindo demonstrar as regras de prioridade e os relatórios solicitados.
 
-## Visão Geral
+## Regras Implementadas
 
-Este projeto simula um fluxo de atendimento por senhas, trabalhando com três tipos:
+- Três tipos de senha: `SP` prioritária, `SE` exame e `SG` geral.
+- Numeração no formato `YYMMDD-PPSQ`, com sequência reiniciada por tipo a cada novo expediente.
+- Atendimento alternado conforme a regra `[SP] -> [SE|SG] -> [SP] -> [SE|SG]`.
+- Expediente diário das 07:00 às 17:00, com descarte das senhas restantes ao encerrar.
+- Descarte sem atendimento para 5% das senhas emitidas, representando cliente ausente.
+- Painel com as 5 últimas senhas chamadas, sem exibir senha futura.
+- Tempo médio simulado por tipo: `SP` entre 10 e 20 min, `SG` entre 2 e 8 min, `SE` com 95% em 1 min e 5% em 5 min.
+- Relatórios diário e mensal com totais emitidos, atendidos, descartados, dados por tipo, tempos médios e relatório detalhado.
 
-| Código | Significado         |
-|--------|---------------------|
-| `SG`   | Senha Geral         |
-| `SP`   | Senha Prioritária   |
-| `SE`   | Senha para Exame    |
+## Telas
 
-Toda a lógica do sistema é implementada **exclusivamente em memória** – não há integração com banco de dados em nenhuma camada do frontend. O serviço de senhas (`SenhaService`, em `src/app/services/senhas.ts`) gerencia filas e métricas no próprio navegador. Não há persistência entre sessões.
+### Cliente
 
-As telas servem como um **protótipo autônomo**, operando somente com dados em memória.
+Emite senhas para atendimento geral, prioritário ou retirada de exames.
 
-## Arquitetura
+<p align="center">
+  <img src="./src/assets/Cliente.png" width="30%" alt="Tela Cliente">
+</p>
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│ Navegador / WebView (Ionic + Angular)                           │
-│ • SenhaService: filas, relatórios e tempos simulados em memória │
-│ • Sem acesso a banco de dados                                   │
-└──────────────────────────────────────────────────────────────────┘
-```
+### Atendente
 
-- **Frontend:** `npm start` → `ng serve` (porta padrão **4200**). Alternativamente: `ionic serve`.
-- **Sem banco de dados:** Todas as operações são voláteis!
+Permite selecionar o guichê, chamar a próxima senha seguindo a regra de prioridade, encerrar expediente e iniciar novo expediente.
 
-## Requisitos
+<p align="center">
+  <img src="./src/assets/Atendente.png" width="30%" alt="Tela Atendente">
+</p>
 
-- [Node.js](https://nodejs.org/) (recomendado LTS) e npm
-- Opcional: [Ionic CLI](https://ionicframework.com/docs/cli) (`npm install -g @ionic/cli`)
+### Relatórios
+
+Exibe os indicadores diário e mensal, a lista detalhada das senhas e as últimas chamadas do painel.
+
+<p align="center">
+  <img src="./src/assets/Relatorios.png" width="30%" alt="Tela Relatórios">
+</p>
+
+## Tecnologias
+
+- Ionic Framework
+- Angular com ngModules
+- Capacitor
+- TypeScript
+- Ionicons
 
 ## Como Executar
 
-### 1. Instale as dependências
-
-Na raiz do projeto:
+Instale as dependências:
 
 ```bash
 npm install
 ```
 
-### 2. Inicie o aplicativo Ionic / Angular
+Execute o app em modo desenvolvimento:
 
 ```bash
 npm start
 ```
 
-Acesse **http://localhost:4200** (porta padrão do `ng serve`).
+Acesse `http://localhost:4200` no navegador.
 
-### Build de produção (frontend)
+## Build
 
 ```bash
 npm run build
 ```
 
-A build será gerada na pasta `www/`.
+A saída de produção será gerada em `www/`, diretório usado pelo Capacitor.
 
-## Aplicativo (Telas)
+## Estrutura
 
-Navegação por abas (`src/app/tabs/`):
-
-| Aba        | Rota   | Função resumida                                                                               |
-|------------|--------|-----------------------------------------------------------------------------------------------|
-| Cliente    | `tab1` | Emissão de senha (Geral, Prioritária, Exame), operando tudo em memória.                       |
-| Atendente  | `tab2` | Chama a próxima senha da fila em memória; **guichê** informado na tela fica salvo em memória. |
-| Relatórios | `tab3` | Totais emitidos/atendidos, médias simuladas, últimas chamadas.                                |
-
-Formato da senha exibida no cliente: `AAMMDD-TIPO###` (ex.: `260402-SP001`).
-
-## Estrutura de Pastas
-
-```
+```text
 MobileTicketsIonic/
+├── capacitor.config.ts
 ├── src/
 │   ├── app/
-│   │   ├── services/senhas.ts # SenhaService (lógica em memória)
-│   │   ├── tab1/ tab2/ tab3/
+│   │   ├── services/senhas.ts
+│   │   ├── tab1/
+│   │   ├── tab2/
+│   │   ├── tab3/
 │   │   └── tabs/
-│   ├── controllers/
-│   │   └── senhaController.ts # Lógica de senha (caso conectado a backend futuro)
-├── package.json
-└── README.md
+│   └── assets/
+├── LICENSE
+├── README.md
+└── package.json
 ```
 
-## Scripts npm (Frontend)
+## Scripts
 
-| Script            | Comando                   |
-|-------------------|--------------------------|
-| Desenvolvimento   | `npm start` (`ng serve`) |
-| Build             | `npm run build`          |
-| Watch             | `npm run watch`          |
-| Testes            | `npm test`               |
-| Lint              | `npm run lint`           |
-
-## Aplicativo (Telas)
-
-<p align="center">
-  <img src="./src/assets/Cliente.png" width="30%"><br>
-  <b>Cliente</b>
-</p>
-
-<p align="center">
-  <img src="./src/assets/Atendente.png" width="30%"><br>
-  <b>Atendente</b>
-</p>
-
-<p align="center">
-  <img src="./src/assets/Relatorios.png" width="30%"><br>
-  <b>Relatórios</b>
-</p>
+| Script | Comando | Descrição |
+|---|---|---|
+| `start` | `ng serve` | Executa o app localmente |
+| `build` | `ng build` | Gera a build em `www/` |
+| `watch` | `ng build --watch --configuration development` | Build em modo observação |
+| `test` | `ng test` | Executa os testes Angular |
+| `lint` | `ng lint` | Executa o lint configurado |
 
 ## Licença
 
-Projeto de caráter acadêmico, destinado a fins de estudo.
+Este projeto está licenciado sob a licença MIT. Consulte o arquivo [LICENSE](./LICENSE).

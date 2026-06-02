@@ -1,5 +1,7 @@
 {
-  "name": "lista3",
-  "integrations": {},
+  "name": "MobileTicketsIonic",
+  "integrations": {
+    "capacitor": {}
+  },
   "type": "angular"
 }
